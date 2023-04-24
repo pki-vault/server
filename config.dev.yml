@@ -1,0 +1,6 @@
+mode: 'debug'
+dsn: 'postgres://postgres:insecure-password-do-not-use@localhost:5434/postgres?sslmode=disable'
+listen_addresses:
+  - '127.0.0.1:8080'
+migration:
+  basePath: './internal/db/migrations'

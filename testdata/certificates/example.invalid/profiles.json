@@ -1,0 +1,57 @@
+{
+  "signing": {
+    "default": {
+      "expiry": "730h"
+    },
+    "profiles": {
+      "ca": {
+        "usages": [
+          "cert sign"
+        ],
+        "expiry": "730h",
+        "ca_constraint": {
+          "is_ca": true,
+          "max_path_len": 0,
+          "max_path_len_zero": true
+        }
+      },
+      "expired_ca": {
+        "usages": [
+          "cert sign"
+        ],
+        "expiry": "730h",
+        "not_before": "2022-01-01T00:00:00Z",
+        "not_after": "2022-01-02T00:00:00Z",
+        "ca_constraint": {
+          "is_ca": true,
+          "max_path_len": 0,
+          "max_path_len_zero": true
+        }
+      },
+      "server": {
+        "usages": [
+          "key encipherment",
+          "server auth"
+        ],
+        "expiry": "730h"
+      },
+      "expired_server": {
+        "usages": [
+          "key encipherment",
+          "server auth"
+        ],
+        "not_before": "2022-01-01T01:00:00Z",
+        "not_after": "2022-01-01T23:00:00Z",
+        "expiry": "730h"
+      },
+      "client": {
+        "usages": [
+          "signing",
+          "key encipherment",
+          "client auth"
+        ],
+        "expiry": "730h"
+      }
+    }
+  }
+}

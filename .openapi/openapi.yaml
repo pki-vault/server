@@ -1,0 +1,366 @@
+openapi: 3.0.3
+info:
+  title: PKI-Vault API
+  version: 1.0.0
+  description: An API for managing X.509 certificates and subscriptions.
+paths:
+  /v1/x509/import/bundle:
+    post:
+      summary: 'Import a Bundle of Certificate + Private Key + Certificate Chain'
+      description: >
+        Import a X.509 certificate bundle of a PEM-encoded X.509 certificate, a PEM-encoded private key that
+        corresponds to the certificate's public key and a chain of PEM-encoded X.509 intermediate certificates that links
+        the certificate to a trusted root certificate
+      operationId: importX509BundleV1
+      tags:
+        - X.509
+      requestBody:
+        description: >
+          Request body to import a X.509 certificate bundle of a PEM-encoded X.509 certificate, a PEM-encoded private key that
+          corresponds to the certificate's public key and a chain of PEM-encoded X.509 intermediate certificates that links
+          the certificate to a trusted root certificate
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportX509CertificateBundle'
+      responses:
+        201:
+          description: Certificate bundle successfully imported
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  certificates:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/X509Certificate'
+                  private_keys:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/X509PrivateKey'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/x509/import/bulk:
+    post:
+      summary: 'Import Multiple Certificates + Private Keys'
+      description: Import multiple X.509 certificates at once
+      operationId: bulkImportX509V1
+      tags:
+        - X.509
+      requestBody:
+        description: Request body for importing multiple X.509 certificates at once
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ImportX509CertificatesInBulk'
+      responses:
+        201:
+          description: Certificates successfully created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  certificates:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/X509Certificate'
+                  private_keys:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/X509PrivateKey'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/x509/certificates/updates:
+    get:
+      summary: Get Certificate Updates
+      description: >
+        Retrieve the most recent versions of X.509 certificates satisfying a subscriptions requirements
+      operationId: getX509CertificateUpdatesV1
+      tags:
+        - X.509
+      parameters:
+        - in: query
+          name: subscriptions
+          description: A list of subscription IDs
+          schema:
+            type: array
+            items:
+              type: string
+              format: uuid
+          required: true
+        - in: query
+          name: after
+          description: Retrieve updates that occurred after the specified timestamp
+          schema:
+            type: string
+            format: date-time
+          required: true
+      responses:
+        200:
+          description: A list of X.509 certificate updates
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  certificates:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/X509Certificate'
+                  private_keys:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/X509PrivateKey'
+        400:
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/x509/certificates/subscriptions:
+    post:
+      summary: Create Subscription
+      description: Create a subscription for X.509 certificate update retrieval
+      operationId: createX509CertificateSubscriptionV1
+      tags:
+        - X.509
+      requestBody:
+        description: Request body for creating a subscription for X.509 certificate updates
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateX509CertificateSubscription'
+      responses:
+        200:
+          description: Subscription successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/X509CertificateSubscription'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /v1/x509/certificates/subscriptions/{id}:
+    delete:
+      summary: Delete Subscription
+      description: Delete an X.509 certificate subscription
+      operationId: deleteX509CertificateSubscriptionV1
+      tags:
+        - X.509
+      parameters:
+        - name: id
+          in: path
+          description: Subscription ID
+          schema:
+            type: string
+            format: uuid
+          required: true
+      responses:
+        204:
+          description: Subscription successfully deleted
+        404:
+          description: Subscription does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+        detailMessage:
+          type: string
+    X509PrivateKey:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        key:
+          type: string
+          description: PEM-encoded private key that corresponds to the certificate's public key
+          example: |
+            -----BEGIN PRIVATE KEY-----\n [...] \n-----END PRIVATE KEY-----\n
+      required:
+        - id
+        - key
+    X509Certificate:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        common_name:
+          type: string
+          description: Subject common name of the certificate
+        sans:
+          type: array
+          description: Subject alternative names of the certificate
+          items:
+            type: string
+        certificate:
+          type: string
+          description: PEM-encoded X.509 certificate
+          example: |
+            -----BEGIN CERTIFICATE-----\n [...] \n-----END CERTIFICATE-----\n
+        private_key_id:
+          type: string
+          format: uuid
+          description: ID of the private key that corresponds to the certificate's public key
+        parent_certificate_id:
+          type: string
+          format: uuid
+          description: ID of the certificate which links the certificate to its authority certificate
+        not_before:
+          type: string
+          format: date-time
+          description: Point in time when the certificate starts to be valid
+        not_after:
+          type: string
+          format: date-time
+          description: Point in time when the certificate ends to be valid
+        created_at:
+          type: string
+          format: date-time
+          description: Point in time when the certificate was created in the service
+      required:
+        - id
+        - sans
+        - certificate
+        - not_before
+        - not_after
+        - created_at
+    ImportX509CertificateBundle:
+      type: object
+      description: >
+        Schema for importing a X.509 certificate bundle of a PEM-encoded X.509 certificate, a PEM-encoded private key that
+        corresponds to the certificate's public key and a chain of PEM-encoded X.509 intermediate certificates that links
+        the certificate to a trusted root certificate
+      properties:
+        certificate:
+          type: string
+          description: PEM-encoded X.509 certificate
+          example: |
+            -----BEGIN CERTIFICATE-----\n [...] \n-----END CERTIFICATE-----\n
+        private_key:
+          type: string
+          description: PEM-encoded private key that corresponds to the certificate's public key
+          example: |
+            -----BEGIN PRIVATE KEY-----\n [...] \n-----END PRIVATE KEY-----\n
+        chain:
+          type: string
+          description: Chain of PEM-encoded X.509 intermediate certificates that links the certificate to a trusted root certificate
+          example: |
+            -----BEGIN CERTIFICATE-----\n [...] \n-----END CERTIFICATE-----
+            -----BEGIN CERTIFICATE-----\n [...] \n-----END CERTIFICATE-----\n
+      required:
+        - certificate
+        - chain
+    ImportX509CertificatesInBulk:
+      type: object
+      description: Schema for importing multiple X.509 certificates at once
+      properties:
+        certificates:
+          type: array
+          description: List of PEM-encoded X.509 certificates
+          items:
+            type: string
+            description: PEM-encoded X.509 certificate
+          example:
+            - -----BEGIN CERTIFICATE-----\n [...] \n-----END CERTIFICATE-----\n
+        private_keys:
+          type: array
+          description: List of PEM-encoded private keys
+          items:
+            type: string
+            description: PEM-encoded private key
+          example:
+            - -----BEGIN PRIVATE KEY-----\n [...] \n-----END PRIVATE KEY-----\n
+    CreateX509CertificateSubscription:
+      type: object
+      description: Schema for creating a subscription for X.509 certificate updates
+      properties:
+        subject_alt_names:
+          type: array
+          description: Subject alternative names certificates should at least include to match the subscriptions requirements
+          items:
+            type: string
+          example:
+            - api.example.net
+            - api.example.com
+        include_private_key:
+          type: boolean
+          description: Whether update responses should include private keys
+      required:
+        - subject_alt_names
+        - include_private_key
+    X509CertificateSubscription:
+      type: object
+      description: Schema for an X.509 certificate subscription
+      properties:
+        id:
+          type: string
+          format: uuid
+          minimum: 1
+        subject_alt_names:
+          type: array
+          description: Subject alternative names certificates should at least include to match the subscriptions requirements
+          items:
+            type: string
+          example:
+            - api.example.net
+            - api.example.com
+        include_private_key:
+          type: boolean
+          description: Whether update responses should include private keys
+        created_at:
+          type: string
+          format: date-time
+          description: Point in time when the certificate subscription was created in the service
+      required:
+        - id
+        - subject_alt_names
+        - include_private_key
+        - created_at

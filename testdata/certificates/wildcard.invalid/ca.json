@@ -1,0 +1,11 @@
+{
+  "CN": "Intermediate wildcard.invalid CA",
+  "CA": {
+    "expiry": "730h",
+    "pathlen": 1
+  },
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  }
+}

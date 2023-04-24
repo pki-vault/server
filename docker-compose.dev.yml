@@ -1,0 +1,12 @@
+version: '3.3'
+services:
+  postgres:
+    image: postgres:14.7
+    restart: unless-stopped
+    environment:
+      - 'TZ=Europe/London'
+      - 'POSTGRES_PASSWORD=${PSQL_PASS}'
+    ports:
+      - '${PSQL_HOST}:${PSQL_PORT}:5432'
+    volumes:
+      - './.docker/volumes/postgres/data:/var/lib/postgresql/data'

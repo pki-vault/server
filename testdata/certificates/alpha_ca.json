@@ -1,0 +1,11 @@
+{
+  "CN": "Test Root CA Alpha",
+  "CA": {
+    "expiry": "730h",
+    "pathlen": 2
+  },
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  }
+}

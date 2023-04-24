@@ -1,0 +1,12 @@
+wipe = true
+no-tests = false
+add-enum-types = true
+no-auto-timestamps = true
+
+[psql]
+# host, port & pass retrieved via .env file
+dbname = "postgres"
+schema = "public"
+user = "postgres"
+sslmode = "disable"
+blacklist = ["schema_migrations"]
