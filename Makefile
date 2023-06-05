@@ -22,7 +22,7 @@ migrate-postgresql: .make/install-tools
 	godotenv go run .github/workflows/migrate/pgsql.go
 
 .PHONY: generate-all
-generate-all: generate-sqlboiler generate-openapi-boilerplate generate-go
+generate-all: generate-sqlboiler generate-openapi-boilerplate generate-go generate-test-certificates
 
 .PHONY: generate-go
 generate-go: .make/install-tools
@@ -35,6 +35,10 @@ generate-sqlboiler: .make/install-tools
 .PHONY: generate-openapi-boilerplate
 generate-openapi-boilerplate:
 	oapi-codegen -config .openapi/oapi-codegen.cfg.yaml .openapi/openapi.yaml
+
+.PHONY: generate-test-certificates
+generate-test-certificates:
+	bash testdata/certificates/generate.sh
 
 .PHONY: go-test
 go-test: .make/install-tools

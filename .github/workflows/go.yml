@@ -29,11 +29,12 @@ jobs:
         run: |
           make migrate-postgresql
 
-      - name: Generate Go code
+      - name: Generates code and test data
         run: make generate-all
 
       - name: Build
         run: go build -v ./...
 
       - name: Test
+
         run: make go-test
