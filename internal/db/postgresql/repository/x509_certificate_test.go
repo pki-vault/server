@@ -12,7 +12,7 @@ import (
 	"github.com/jonboulle/clockwork"
 	"github.com/pki-vault/server/internal/db/postgresql/models"
 	"github.com/pki-vault/server/internal/db/repository"
-	"github.com/pki-vault/server/internal/services"
+	"github.com/pki-vault/server/internal/service"
 	"github.com/pki-vault/server/internal/testutil"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/queries/qm"
@@ -114,7 +114,7 @@ func TestX509CertificateRepository_FindByIssuerHashAndNoParentSet(t *testing.T) 
 			},
 			args: args{
 				ctx: ctx,
-				issuerHash: services.ComputeSubjectOrIssuerHash(pkix.Name{
+				issuerHash: service.ComputeSubjectOrIssuerHash(pkix.Name{
 					CommonName: "Test Root CA Alpha",
 				}),
 			},
@@ -129,7 +129,7 @@ func TestX509CertificateRepository_FindByIssuerHashAndNoParentSet(t *testing.T) 
 			},
 			args: args{
 				ctx: ctx,
-				issuerHash: services.ComputeSubjectOrIssuerHash(pkix.Name{
+				issuerHash: service.ComputeSubjectOrIssuerHash(pkix.Name{
 					CommonName: "does-not-exist.invalid",
 				}),
 			},
@@ -203,7 +203,7 @@ func TestCertificateRepository_FindBySubjectHash(t *testing.T) {
 			},
 			args: args{
 				ctx: ctx,
-				subjectHash: services.ComputeSubjectOrIssuerHash(pkix.Name{
+				subjectHash: service.ComputeSubjectOrIssuerHash(pkix.Name{
 					CommonName: "example.invalid",
 				}),
 			},
@@ -218,7 +218,7 @@ func TestCertificateRepository_FindBySubjectHash(t *testing.T) {
 			},
 			args: args{
 				ctx: ctx,
-				subjectHash: services.ComputeSubjectOrIssuerHash(pkix.Name{
+				subjectHash: service.ComputeSubjectOrIssuerHash(pkix.Name{
 					CommonName: "does-not-exist.invalid",
 				}),
 			},
@@ -837,11 +837,11 @@ func createCertificateWithOptionalKey(ctx context.Context, clock clockwork.Clock
 	cert, _, privKeyPemBlock := readCertificateWithOptionalKey(basePath, certFile, keyFile, includePrivKey)
 
 	if includePrivKey {
-		privKey, privKeyType, err := services.ParsePrivateKey(privKeyPemBlock.Bytes)
+		privKey, privKeyType, err := service.ParsePrivateKey(privKeyPemBlock.Bytes)
 		if err != nil {
 			panic(err)
 		}
-		pubKeyHash, err = services.ComputePublicKeyTypeSpecificHashFromPrivateKey(privKey)
+		pubKeyHash, err = service.ComputePublicKeyTypeSpecificHashFromPrivateKey(privKey)
 		if err != nil {
 			panic(err)
 		}
@@ -856,7 +856,7 @@ func createCertificateWithOptionalKey(ctx context.Context, clock clockwork.Clock
 			uuid.New(),
 			repository.PrivateKeyType(privKeyType),
 			privKeyPemBlock.Type,
-			services.ComputeBytesHash(privKeyPemBlock.Bytes),
+			service.ComputeBytesHash(privKeyPemBlock.Bytes),
 			privKeyPemBlock.Bytes,
 			pubKeyHash,
 			clock.Now(), // FIXME?
@@ -872,9 +872,9 @@ func createCertificateWithOptionalKey(ctx context.Context, clock clockwork.Clock
 			uuid.New(),
 			cert.Subject.CommonName,
 			cert.DNSNames,
-			services.ComputeSubjectOrIssuerHash(cert.Issuer),
-			services.ComputeSubjectOrIssuerHash(cert.Subject),
-			services.ComputeBytesHash(cert.Raw),
+			service.ComputeSubjectOrIssuerHash(cert.Issuer),
+			service.ComputeSubjectOrIssuerHash(cert.Subject),
+			service.ComputeBytesHash(cert.Raw),
 			cert.Raw,
 			pubKeyHash, // FIXME wrong
 			parentCertID,

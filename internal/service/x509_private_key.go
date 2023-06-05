@@ -1,4 +1,4 @@
-package services
+package service
 
 //go:generate mockgen -destination=../mocks/services/x509_private_key.go -source x509_private_key.go
 

@@ -2,12 +2,12 @@ package wire
 
 import (
 	"github.com/google/wire"
-	"github.com/pki-vault/server/internal/services"
+	"github.com/pki-vault/server/internal/service"
 )
 
 var servicesSet = wire.NewSet(
-	services.NewX509CertificateService,
-	services.NewX509CertificateSubscriptionService,
-	services.NewDefaultX509PrivateKeyService,
-	services.NewX509ImportService,
+	service.NewX509CertificateService,
+	service.NewX509CertificateSubscriptionService,
+	service.NewDefaultX509PrivateKeyService,
+	service.NewX509ImportService,
 )

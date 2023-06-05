@@ -3,7 +3,7 @@ package restserver
 import (
 	"context"
 	"encoding/pem"
-	"github.com/pki-vault/server/internal/services"
+	"github.com/pki-vault/server/internal/service"
 	"go.uber.org/zap"
 	"net/http"
 	"strings"
@@ -11,12 +11,12 @@ import (
 
 type RestHandlerImpl struct {
 	logger                             *zap.Logger
-	x509CertificateSubscriptionService *services.X509CertificateSubscriptionService
-	x509CertificateService             *services.X509CertificateService
-	x509ImportService                  *services.X509ImportService
+	x509CertificateSubscriptionService *service.X509CertificateSubscriptionService
+	x509CertificateService             *service.X509CertificateService
+	x509ImportService                  *service.X509ImportService
 }
 
-func NewRestHandlerImpl(logger *zap.Logger, x509CertificateSubscriptionService *services.X509CertificateSubscriptionService, x509CertificateService *services.X509CertificateService, x509ImportServiceV2 *services.X509ImportService) *RestHandlerImpl {
+func NewRestHandlerImpl(logger *zap.Logger, x509CertificateSubscriptionService *service.X509CertificateSubscriptionService, x509CertificateService *service.X509CertificateService, x509ImportServiceV2 *service.X509ImportService) *RestHandlerImpl {
 	return &RestHandlerImpl{logger: logger, x509CertificateSubscriptionService: x509CertificateSubscriptionService, x509CertificateService: x509CertificateService, x509ImportService: x509ImportServiceV2}
 }
 
@@ -206,7 +206,7 @@ func (r *RestHandlerImpl) ImportX509BundleV1(
 func (r *RestHandlerImpl) CreateX509CertificateSubscriptionV1(
 	ctx context.Context, request CreateX509CertificateSubscriptionV1RequestObject,
 ) (CreateX509CertificateSubscriptionV1ResponseObject, error) {
-	createRequest := services.NewCreateX509CertificateSubscriptionDto(
+	createRequest := service.NewCreateX509CertificateSubscriptionDto(
 		request.Body.SubjectAltNames,
 		request.Body.IncludePrivateKey)
 	createdSubscription, err := r.x509CertificateSubscriptionService.Create(ctx, createRequest)
@@ -248,14 +248,14 @@ func (r *RestHandlerImpl) DeleteX509CertificateSubscriptionV1(
 	return DeleteX509CertificateSubscriptionV1204Response{}, nil
 }
 
-func dtoToX509PrivateKey(privKeyDto *services.X509PrivateKeyDto) X509PrivateKey {
+func dtoToX509PrivateKey(privKeyDto *service.X509PrivateKeyDto) X509PrivateKey {
 	return X509PrivateKey{
 		Id:  privKeyDto.ID,
 		Key: privKeyDto.PemPrivateKey,
 	}
 }
 
-func dtoToX509Certificate(certDto *services.X509CertificateDto) X509Certificate {
+func dtoToX509Certificate(certDto *service.X509CertificateDto) X509Certificate {
 	return X509Certificate{
 		Certificate:         certDto.CertificatePem,
 		CommonName:          ptr(certDto.CommonName),
@@ -269,7 +269,7 @@ func dtoToX509Certificate(certDto *services.X509CertificateDto) X509Certificate 
 	}
 }
 
-func dtoToX509CertificateSubscription(dto *services.X509CertificateSubscriptionDto) X509CertificateSubscription {
+func dtoToX509CertificateSubscription(dto *service.X509CertificateSubscriptionDto) X509CertificateSubscription {
 	return X509CertificateSubscription{
 		CreatedAt:         dto.CreatedAt,
 		Id:                dto.ID,
