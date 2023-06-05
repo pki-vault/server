@@ -8,7 +8,9 @@ TOOLS = \
     "github.com/deepmap/oapi-codegen/cmd/oapi-codegen@latest" \
     "github.com/google/wire/cmd/wire@latest" \
     "github.com/golang/mock/mockgen@v1.6.0" \
-    "github.com/joho/godotenv/cmd/godotenv@latest"
+    "github.com/joho/godotenv/cmd/godotenv@latest" \
+    "github.com/cloudflare/cfssl/cmd/cfssl@v1.6.4" \
+    "github.com/cloudflare/cfssl/cmd/cfssljson@v1.6.4" \
 
 .make/install-tools: go.mod go.sum
 	@for tool in $(TOOLS); do \
