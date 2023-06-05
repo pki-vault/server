@@ -3,6 +3,8 @@
 The server component of the PKI Vault responsible for storing and managing certificates
 and their keys.
 
+:warning: **This project is still in development and not ready for production use.**
+
 ## Features
 
 * REST API for managing certificates and keys (mostly only insertion and retrieval of the latest version of a
@@ -25,14 +27,12 @@ or [open an issue](https://github.com/pki-vault/server/issues). An example imple
 [internal/db/postgresql](internal/db/postgresql).
 
 ## Usage
-
 Currently, there is no release available or docker image, so you have to build the binary yourself.
 
 ### Build
 
 Before you build the binary, you have to make sure all generated code is up-to-date.
 Execute the following commands to generate all code:
-
 ```sh
 make generate-all
 go build
@@ -91,6 +91,12 @@ Some code in this project gets generated from different sources. Here is an over
 * [**SQLBoiler**](https://github.com/volatiletech/sqlboiler): per SQL database type structs for safe access; generated
   at [internal/db](internal/db) from the database schema. The database must be online and must have all migrations
   applied for generation. It uses the credentials in [.env](.env) to connect to the database.
+
+### Testdata Generation
+
+The server uses certificates for testing. The generation script and certificate specifications can be found in
+[testdata/certificates](testdata/certificates). The certificates are generated
+using [cfssl](https://github.com/cloudflare/cfssl).
 
 ### Setup
 
