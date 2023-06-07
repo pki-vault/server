@@ -1,5 +1,7 @@
 # PKI Vault Server
 
+[![codecov](https://codecov.io/gh/pki-vault/server/branch/main/graph/badge.svg?token=P2G4BSOGDL)](https://codecov.io/gh/pki-vault/server)
+
 The server component of the PKI Vault responsible for storing and managing certificates
 and their keys.
 
