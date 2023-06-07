@@ -23,7 +23,7 @@ jobs:
       - name: Start dev containers
         run: |
           docker compose -f docker-compose.dev.yml up -d
-          sleep 10
+          timeout 30 sh -c 'until docker exec $(docker-compose -f docker-compose.dev.yml ps -q postgres) pg_isready; do sleep 0.2; done'
 
       - name: Run DB migrations
         run: |
