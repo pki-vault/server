@@ -45,3 +45,7 @@ generate-test-certificates:
 .PHONY: go-test
 go-test: .make/install-tools
 	godotenv go test -v ./...
+
+.PHONY: go-test-coverage
+go-test-coverage: .make/install-tools
+	godotenv go test -race -coverprofile=coverage.out -covermode=atomic -v ./...
