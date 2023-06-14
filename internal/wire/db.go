@@ -20,7 +20,7 @@ func ProvidePostgresqlX509CertificateSubscriptionRepository(repositoryBundle rep
 	return repositoryBundle.X509CertificateSubscriptionRepository()
 }
 
-func ProvidePostgresqlX509PrivateKeyRepository(repositoryBundle repository.Bundle) repository.PrivateKeyRepository {
+func ProvidePostgresqlX509PrivateKeyRepository(repositoryBundle repository.Bundle) repository.X509PrivateKeyRepository {
 	return repositoryBundle.X509PrivateKeyRepository()
 }
 

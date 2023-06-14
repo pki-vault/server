@@ -1,5 +1,7 @@
 package service
 
+//go:generate mockgen -destination=../mocks/services/x509_import.go -source x509_import.go
+
 import (
 	"bytes"
 	"context"
@@ -11,16 +13,20 @@ import (
 	"github.com/pki-vault/server/internal/db/repository"
 )
 
-type X509ImportService struct {
+type X509ImportService interface {
+	Import(ctx context.Context, certPems []*pem.Block, privKeyPems []*pem.Block) ([]*X509CertificateDto, []*X509PrivateKeyDto, error)
+}
+
+type DefaultX509ImportService struct {
 	repository.Bundle
 	clock clockwork.Clock
 }
 
-func NewX509ImportService(bundle repository.Bundle, clock clockwork.Clock) *X509ImportService {
-	return &X509ImportService{Bundle: bundle, clock: clock}
+func NewX509ImportService(bundle repository.Bundle, clock clockwork.Clock) *DefaultX509ImportService {
+	return &DefaultX509ImportService{Bundle: bundle, clock: clock}
 }
 
-func (x *X509ImportService) Import(
+func (x *DefaultX509ImportService) Import(
 	ctx context.Context, certPems []*pem.Block, privKeyPems []*pem.Block,
 ) ([]*X509CertificateDto, []*X509PrivateKeyDto, error) {
 	txCtx, err := x.TransactionManager().BeginTx(ctx)
@@ -117,7 +123,7 @@ func (x *X509ImportService) Import(
 // filterToBeCreatedCertificates find existing certificates in the database and overwrite.
 // This is necessary because the underlying DB should not allow duplicates.
 // So we use the existing cert, primarily because of its ID we can use.
-func (x *X509ImportService) filterToBeCreatedCertificates(
+func (x *DefaultX509ImportService) filterToBeCreatedCertificates(
 	txCtx context.Context, certPems []*pem.Block,
 ) (toBeCreatedCerts []*repository.X509CertificateDao, alreadyExistingCerts []*repository.X509CertificateDao, err error) {
 	certPems = removeDuplicates(certPems)
@@ -151,7 +157,7 @@ outerLoop:
 	return toBeCreatedCerts, alreadyExistingCerts, nil
 }
 
-func (x *X509ImportService) persistPrivateKeys(
+func (x *DefaultX509ImportService) persistPrivateKeys(
 	ctx context.Context, privKeys []*repository.X509PrivateKeyDao,
 ) (createdPrivKeys []*repository.X509PrivateKeyDao, err error) {
 	createdPrivKeys = make([]*repository.X509PrivateKeyDao, len(privKeys))
@@ -166,7 +172,7 @@ func (x *X509ImportService) persistPrivateKeys(
 	return createdPrivKeys, nil
 }
 
-func (x *X509ImportService) linkPrivateKeysToCertificates(
+func (x *DefaultX509ImportService) linkPrivateKeysToCertificates(
 	ctx context.Context, privKeys []*repository.X509PrivateKeyDao, certs []*repository.X509CertificateDao,
 ) (deferredUpdates []*repository.X509CertificateDao, err error) {
 	for _, cert := range certs {
@@ -209,7 +215,7 @@ func (x *X509ImportService) linkPrivateKeysToCertificates(
 	return deferredUpdates, err
 }
 
-func (x *X509ImportService) linkParentCertificatesAmongThemselves(
+func (x *DefaultX509ImportService) linkParentCertificatesAmongThemselves(
 	certs []*repository.X509CertificateDao,
 ) error {
 	parsedCerts, err := parseCerts(certs)
@@ -242,7 +248,7 @@ func (x *X509ImportService) linkParentCertificatesAmongThemselves(
 	return nil
 }
 
-func (x *X509ImportService) linkCertificatesFromDBAsParents(
+func (x *DefaultX509ImportService) linkCertificatesFromDBAsParents(
 	ctx context.Context, certs []*repository.X509CertificateDao,
 ) error {
 	parsedCerts, err := parseCerts(certs)
@@ -277,7 +283,7 @@ func (x *X509ImportService) linkCertificatesFromDBAsParents(
 
 // linkCertificatesAsParentsInDBCertificates finds certificates in the DB where the parent certificate is not set
 // and try to find a parent certificate for them in the supplied certs slice (probably from import list).
-func (x *X509ImportService) linkCertificatesAsParentsInDBCertificates(
+func (x *DefaultX509ImportService) linkCertificatesAsParentsInDBCertificates(
 	ctx context.Context, certs []*repository.X509CertificateDao,
 ) (deferredUpdates []*repository.X509CertificateDao, err error) {
 	parsedCerts, err := parseCerts(certs)
@@ -331,7 +337,7 @@ func parseCerts(certs []*repository.X509CertificateDao) (map[uuid.UUID]*x509.Cer
 
 // executeDeferredCertUpdates executes the deferred updates for certificates already in the database,
 // where the new parent must have first been inserted before the update to satisfy foreign key constraints.
-func (x *X509ImportService) executeDeferredCertUpdates(ctx context.Context, deferredCertUpdates []*repository.X509CertificateDao) error {
+func (x *DefaultX509ImportService) executeDeferredCertUpdates(ctx context.Context, deferredCertUpdates []*repository.X509CertificateDao) error {
 	for _, cert := range deferredCertUpdates {
 		_, updated, err := x.X509CertificateRepository().Update(ctx, cert)
 		if err != nil {
@@ -344,7 +350,7 @@ func (x *X509ImportService) executeDeferredCertUpdates(ctx context.Context, defe
 	return nil
 }
 
-func (x *X509ImportService) sortAndPersistCertificates(
+func (x *DefaultX509ImportService) sortAndPersistCertificates(
 	ctx context.Context, certs []*repository.X509CertificateDao,
 ) ([]*repository.X509CertificateDao, error) {
 	edges, noEdges, err := buildCertParentToChildGraph(certs)
@@ -453,7 +459,7 @@ func topologicalSortCerts(
 	return result, nil
 }
 
-func (x *X509ImportService) parseX509Certificate(certPem *pem.Block) (*repository.X509CertificateDao, error) {
+func (x *DefaultX509ImportService) parseX509Certificate(certPem *pem.Block) (*repository.X509CertificateDao, error) {
 	cert, err := x509.ParseCertificate(certPem.Bytes)
 	if err != nil {
 		return nil, err
@@ -481,7 +487,7 @@ func (x *X509ImportService) parseX509Certificate(certPem *pem.Block) (*repositor
 	), nil
 }
 
-func (x *X509ImportService) parseX509PrivateKey(privKeyPem *pem.Block) (*repository.X509PrivateKeyDao, error) {
+func (x *DefaultX509ImportService) parseX509PrivateKey(privKeyPem *pem.Block) (*repository.X509PrivateKeyDao, error) {
 	privKey, privKeyType, err := ParsePrivateKey(privKeyPem.Bytes)
 	if err != nil {
 		return nil, err
@@ -505,7 +511,7 @@ func (x *X509ImportService) parseX509PrivateKey(privKeyPem *pem.Block) (*reposit
 
 // findExistingCertificates attaches already existing certificates to the given list of certificates and replaces them.
 // This is necessary because we are required to avoid duplicate certificates in the database.
-func (x *X509ImportService) findExistingCertificates(ctx context.Context, certs []*repository.X509CertificateDao) ([]*repository.X509CertificateDao, error) {
+func (x *DefaultX509ImportService) findExistingCertificates(ctx context.Context, certs []*repository.X509CertificateDao) ([]*repository.X509CertificateDao, error) {
 	certByteHashes := make([]*[]byte, len(certs))
 	for i, cert := range certs {
 		certByteHashes[i] = &cert.BytesHash

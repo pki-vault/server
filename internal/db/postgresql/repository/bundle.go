@@ -23,7 +23,7 @@ func (p *Bundle) X509CertificateSubscriptionRepository() templaterepository.X509
 	return p.x509CertificateSubscriptionRepository
 }
 
-func (p *Bundle) X509PrivateKeyRepository() templaterepository.PrivateKeyRepository {
+func (p *Bundle) X509PrivateKeyRepository() templaterepository.X509PrivateKeyRepository {
 	return p.privateKeyRepository
 }
 

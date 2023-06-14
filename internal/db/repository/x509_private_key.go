@@ -1,6 +1,6 @@
 package repository
 
-//go:generate mockgen -destination=../../mocks/db/private_key.go -source private_key.go
+//go:generate mockgen -destination=../../mocks/db/x509_private_key.go -source x509_private_key.go
 
 import (
 	"context"
@@ -32,7 +32,7 @@ func NewX509PrivateKeyDao(ID uuid.UUID, Type PrivateKeyType, pemBlockType string
 	return &X509PrivateKeyDao{ID: ID, Type: Type, PemBlockType: pemBlockType, BytesHash: bytesHash, Bytes: bytes, PublicKeyHash: pubKeyHash, CreatedAt: createdAt}
 }
 
-type PrivateKeyRepository interface {
+type X509PrivateKeyRepository interface {
 	GetOrCreate(ctx context.Context, privKey *X509PrivateKeyDao) (*X509PrivateKeyDao, error)
 	FindByIDs(ctx context.Context, ids []uuid.UUID) ([]*X509PrivateKeyDao, error)
 	FindByPublicKeyHash(ctx context.Context, pubKeyHash []byte) (privKey *X509PrivateKeyDao, exists bool, err error)

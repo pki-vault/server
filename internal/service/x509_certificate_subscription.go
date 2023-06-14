@@ -1,5 +1,7 @@
 package service
 
+//go:generate mockgen -destination=../mocks/services/x509_certificate_subscription.go -source x509_certificate_subscription.go
+
 import (
 	"context"
 	"fmt"
@@ -25,18 +27,25 @@ func NewCreateX509CertificateSubscriptionDto(subjectAltNames []string, includePr
 	return &CreateX509CertificateSubscriptionDto{SubjectAltNames: subjectAltNames, IncludePrivateKey: includePrivateKey}
 }
 
-type X509CertificateSubscriptionService struct {
+type X509CertificateSubscriptionService interface {
+	Create(ctx context.Context, request *CreateX509CertificateSubscriptionDto) (*X509CertificateSubscriptionDto, error)
+	FindByIDs(ctx context.Context, IDs []uuid.UUID) ([]*X509CertificateSubscriptionDto, error)
+	Exists(ctx context.Context, IDs []uuid.UUID) (notExistingIDs []uuid.UUID, err error)
+	Delete(ctx context.Context, subID uuid.UUID) (rowsDeleted int64, err error)
+}
+
+type DefaultX509CertificateSubscriptionService struct {
 	repository repository.X509CertificateSubscriptionRepository
 	clock      clockwork.Clock
 }
 
 func NewX509CertificateSubscriptionService(
 	repository repository.X509CertificateSubscriptionRepository, clock clockwork.Clock,
-) *X509CertificateSubscriptionService {
-	return &X509CertificateSubscriptionService{repository: repository, clock: clock}
+) *DefaultX509CertificateSubscriptionService {
+	return &DefaultX509CertificateSubscriptionService{repository: repository, clock: clock}
 }
 
-func (x *X509CertificateSubscriptionService) Create(
+func (x *DefaultX509CertificateSubscriptionService) Create(
 	ctx context.Context, request *CreateX509CertificateSubscriptionDto,
 ) (*X509CertificateSubscriptionDto, error) {
 	createdSubscription, err := x.repository.Create(ctx, repository.NewX509CertificateSubscriptionDao(
@@ -51,7 +60,7 @@ func (x *X509CertificateSubscriptionService) Create(
 	return certificateSubscriptionDaoToDto(createdSubscription), nil
 }
 
-func (x *X509CertificateSubscriptionService) FindByIDs(
+func (x *DefaultX509CertificateSubscriptionService) FindByIDs(
 	ctx context.Context, IDs []uuid.UUID,
 ) ([]*X509CertificateSubscriptionDto, error) {
 	foundSubscriptions, err := x.repository.FindByIDs(ctx, IDs)
@@ -61,7 +70,7 @@ func (x *X509CertificateSubscriptionService) FindByIDs(
 	return certificateSubscriptionDaoListToDtoList(foundSubscriptions), nil
 }
 
-func (x *X509CertificateSubscriptionService) Exists(ctx context.Context, IDs []uuid.UUID) (notExistingIDs []uuid.UUID, err error) {
+func (x *DefaultX509CertificateSubscriptionService) Exists(ctx context.Context, IDs []uuid.UUID) (notExistingIDs []uuid.UUID, err error) {
 	fetchedSubs, err := x.repository.FindByIDs(ctx, IDs)
 	if err != nil {
 		return nil, fmt.Errorf("unable find subscriptions by ids: %w", err)
@@ -80,7 +89,7 @@ outerLoop:
 	return notExistingIDs, nil
 }
 
-func (x *X509CertificateSubscriptionService) Delete(ctx context.Context, subID uuid.UUID) (rowsDeleted int64, err error) {
+func (x *DefaultX509CertificateSubscriptionService) Delete(ctx context.Context, subID uuid.UUID) (rowsDeleted int64, err error) {
 	return x.repository.Delete(ctx, subID)
 }
 
