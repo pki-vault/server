@@ -1,5 +1,7 @@
 package service
 
+//go:generate mockgen -destination=../mocks/services/x509_certificate.go -source x509_certificate.go
+
 import (
 	"context"
 	"encoding/pem"
@@ -26,17 +28,23 @@ func NewX509CertificateDto(ID uuid.UUID, commonName string, subjectAltNames []st
 	return &X509CertificateDto{ID: ID, CommonName: commonName, SubjectAltNames: subjectAltNames, CertificatePem: certPem, ParentCertificateID: parentCertID, PrivateKeyID: privKeyID, NotBefore: notBefore, NotAfter: notAfter, CreatedAt: createdAt}
 }
 
-type X509CertificateService struct {
+type X509CertificateService interface {
+	GetUpdates(
+		ctx context.Context, subIDs []uuid.UUID, after time.Time, includeCertChainIfExists bool,
+	) ([]*X509CertificateDto, []*X509PrivateKeyDto, error)
+}
+
+type DefaultX509CertificateService struct {
 	certRepo       repository.X509CertificateRepository
-	subService     *X509CertificateSubscriptionService
+	subService     *DefaultX509CertificateSubscriptionService
 	privKeyService *DefaultX509PrivateKeyService
 }
 
 func NewX509CertificateService(
-	certRepo repository.X509CertificateRepository, subService *X509CertificateSubscriptionService,
+	certRepo repository.X509CertificateRepository, subService *DefaultX509CertificateSubscriptionService,
 	privKeyService *DefaultX509PrivateKeyService,
-) *X509CertificateService {
-	return &X509CertificateService{certRepo: certRepo, subService: subService, privKeyService: privKeyService}
+) *DefaultX509CertificateService {
+	return &DefaultX509CertificateService{certRepo: certRepo, subService: subService, privKeyService: privKeyService}
 }
 
 type getUpdatesResultStruct struct {
@@ -46,7 +54,7 @@ type getUpdatesResultStruct struct {
 
 // GetUpdates returns the latest active certificate for each subscription.
 // Also includes the private key for a certificate if it exists and is configured in the subscription.
-func (x *X509CertificateService) GetUpdates(
+func (x *DefaultX509CertificateService) GetUpdates(
 	ctx context.Context, subIDs []uuid.UUID, after time.Time, includeCertChainIfExists bool,
 ) ([]*X509CertificateDto, []*X509PrivateKeyDto, error) {
 	subs, err := x.subService.FindByIDs(ctx, subIDs)
@@ -114,7 +122,7 @@ func (x *X509CertificateService) GetUpdates(
 	return certDtos, privKeyDtos, nil
 }
 
-func (x *X509CertificateService) getLatestSubscriptionCertificates(
+func (x *DefaultX509CertificateService) getLatestSubscriptionCertificates(
 	ctx context.Context, sub *X509CertificateSubscriptionDto, after time.Time, includeCertChainIfExists bool,
 ) ([]*X509CertificateDto, error) {
 	fetchedCerts, err := x.certRepo.FindLatestActiveBySANsAndCreatedAtAfter(ctx, sub.SANs, after)

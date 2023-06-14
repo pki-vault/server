@@ -14,7 +14,7 @@ import (
 
 type X509PrivateKeyDto struct {
 	ID            uuid.UUID `binding:"required" validate:"required" json:"id" toml:"id" yaml:"id"`
-	PemPrivateKey string    `binding:"required" validate:"required" json:"private_key" toml:"private_key" yaml:"private_key"`
+	PrivateKeyPem string    `binding:"required" validate:"required" json:"private_key" toml:"private_key" yaml:"private_key"`
 	CreatedAt     time.Time `binding:"required" validate:"required" json:"created_at" toml:"created_at" yaml:"created_at"`
 }
 
@@ -24,7 +24,7 @@ type X509PrivateKeyService interface {
 }
 
 func NewX509PrivateKeyDto(ID uuid.UUID, pemPrivateKey string, createdAt time.Time) *X509PrivateKeyDto {
-	return &X509PrivateKeyDto{ID: ID, PemPrivateKey: pemPrivateKey, CreatedAt: createdAt}
+	return &X509PrivateKeyDto{ID: ID, PrivateKeyPem: pemPrivateKey, CreatedAt: createdAt}
 }
 
 type CreatePrivateKeyRequest struct {
@@ -32,11 +32,11 @@ type CreatePrivateKeyRequest struct {
 }
 
 type DefaultX509PrivateKeyService struct {
-	certRepo repository.PrivateKeyRepository
+	certRepo repository.X509PrivateKeyRepository
 	clock    clockwork.Clock
 }
 
-func NewDefaultX509PrivateKeyService(certRepo repository.PrivateKeyRepository, clock clockwork.Clock) *DefaultX509PrivateKeyService {
+func NewDefaultX509PrivateKeyService(certRepo repository.X509PrivateKeyRepository, clock clockwork.Clock) *DefaultX509PrivateKeyService {
 	return &DefaultX509PrivateKeyService{certRepo: certRepo, clock: clock}
 }
 

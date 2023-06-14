@@ -11,13 +11,13 @@ import (
 
 type RestHandlerImpl struct {
 	logger                             *zap.Logger
-	x509CertificateSubscriptionService *service.X509CertificateSubscriptionService
-	x509CertificateService             *service.X509CertificateService
-	x509ImportService                  *service.X509ImportService
+	x509CertificateSubscriptionService service.X509CertificateSubscriptionService
+	x509CertificateService             service.X509CertificateService
+	x509ImportService                  service.X509ImportService
 }
 
-func NewRestHandlerImpl(logger *zap.Logger, x509CertificateSubscriptionService *service.X509CertificateSubscriptionService, x509CertificateService *service.X509CertificateService, x509ImportServiceV2 *service.X509ImportService) *RestHandlerImpl {
-	return &RestHandlerImpl{logger: logger, x509CertificateSubscriptionService: x509CertificateSubscriptionService, x509CertificateService: x509CertificateService, x509ImportService: x509ImportServiceV2}
+func NewRestHandlerImpl(logger *zap.Logger, x509CertificateSubscriptionService service.X509CertificateSubscriptionService, x509CertificateService service.X509CertificateService, x509ImportService service.X509ImportService) *RestHandlerImpl {
+	return &RestHandlerImpl{logger: logger, x509CertificateSubscriptionService: x509CertificateSubscriptionService, x509CertificateService: x509CertificateService, x509ImportService: x509ImportService}
 }
 
 func (r *RestHandlerImpl) GetX509CertificateUpdatesV1(ctx context.Context, request GetX509CertificateUpdatesV1RequestObject) (GetX509CertificateUpdatesV1ResponseObject, error) {
@@ -251,7 +251,7 @@ func (r *RestHandlerImpl) DeleteX509CertificateSubscriptionV1(
 func dtoToX509PrivateKey(privKeyDto *service.X509PrivateKeyDto) X509PrivateKey {
 	return X509PrivateKey{
 		Id:  privKeyDto.ID,
-		Key: privKeyDto.PemPrivateKey,
+		Key: privKeyDto.PrivateKeyPem,
 	}
 }
 

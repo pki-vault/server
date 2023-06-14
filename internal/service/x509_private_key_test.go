@@ -20,7 +20,7 @@ func TestDefaultX509PrivateKeyService_GetOrCreate(t *testing.T) {
 	t.Cleanup(ctrl.Finish)
 
 	ctx := context.Background()
-	certRepo := mock_repository.NewMockPrivateKeyRepository(ctrl)
+	certRepo := mock_repository.NewMockX509PrivateKeyRepository(ctrl)
 
 	toBeCreated := readPemFile(t, "testdata/private_keys/pkcs8_rsa_2048.pem")
 	var expectedKeyUuid uuid.UUID
@@ -43,7 +43,7 @@ func TestDefaultX509PrivateKeyService_GetOrCreate(t *testing.T) {
 
 	expectedKey := &X509PrivateKeyDto{
 		ID:            expectedKeyUuid,
-		PemPrivateKey: string(pem.EncodeToMemory(toBeCreated)),
+		PrivateKeyPem: string(pem.EncodeToMemory(toBeCreated)),
 		CreatedAt:     fakeClock.Now(),
 	}
 	if !reflect.DeepEqual(createdKey, expectedKey) {
@@ -54,12 +54,12 @@ func TestDefaultX509PrivateKeyService_GetOrCreate(t *testing.T) {
 func TestNewDefaultX509PrivateKeyService(t *testing.T) {
 	fakeClock := clockwork.NewFakeClock()
 	ctrl := gomock.NewController(t)
-	certRepo := mock_repository.NewMockPrivateKeyRepository(ctrl)
+	certRepo := mock_repository.NewMockX509PrivateKeyRepository(ctrl)
 
 	t.Cleanup(ctrl.Finish)
 
 	type args struct {
-		certRepo repository.PrivateKeyRepository
+		certRepo repository.X509PrivateKeyRepository
 		clock    clockwork.Clock
 	}
 	tests := []struct {
@@ -114,7 +114,7 @@ func TestNewX509PrivateKeyDto(t *testing.T) {
 			},
 			want: &X509PrivateKeyDto{
 				ID:            uuid.MustParse("db79f4ba-18cb-4c6e-8712-2821b2696d50"),
-				PemPrivateKey: "-----BEGIN PRIVATE KEY-----\ncmFuZG9tIGRhdGE=\n-----END PRIVATE KEY-----\n",
+				PrivateKeyPem: "-----BEGIN PRIVATE KEY-----\ncmFuZG9tIGRhdGE=\n-----END PRIVATE KEY-----\n",
 				CreatedAt:     fakeClock.Now(),
 			},
 		},
@@ -152,7 +152,7 @@ func Test_privateKeyDaoToDto(t *testing.T) {
 			},
 			want: &X509PrivateKeyDto{
 				ID:            uuid.MustParse("db79f4ba-18cb-4c6e-8712-2821b2696d50"),
-				PemPrivateKey: "-----BEGIN PRIVATE KEY-----\ncmFuZG9tIGRhdGE=\n-----END PRIVATE KEY-----\n",
+				PrivateKeyPem: "-----BEGIN PRIVATE KEY-----\ncmFuZG9tIGRhdGE=\n-----END PRIVATE KEY-----\n",
 				CreatedAt:     fakeClock.Now(),
 			},
 		},
